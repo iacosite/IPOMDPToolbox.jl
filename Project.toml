@@ -1,0 +1,6 @@
+authors = ["Iacopo Olivo <iacopo.olivo@gmail.com>"]
+name = "IPOMDPToolbox"
+uuid = "4bc94e48-c29f-11e8-07ee-0ffc18eb0ae4"
+version = "0.1.0"
+
+[deps]
