@@ -1,8 +1,5 @@
 module IPOMDPToolbox
 
-import IPOMDPs
-import POMDPs
-
 export
     # IPOMDP model exploration
     exploreAgent,

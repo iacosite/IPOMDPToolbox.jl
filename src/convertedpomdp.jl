@@ -1,5 +1,7 @@
+using POMDPs
+using IPOMDPs
 #Conversion of a IPOMDP{S}, Agent{S,A,W} and pomdpModel{S,A,W} in a pomdp
-type cPOMDP <: POMDP{Any, Any, Any}
+struct cPOMDP <: POMDP{Any, Any, Any}
     ipomdp::IPOMDP
     agent::Agent
     model::pomdpModel

@@ -1,3 +1,4 @@
+using IPOMDPs
 """
     Explores an agent with its models
 """
@@ -52,14 +53,7 @@ end
         Agent{S,A,W}
         pomdpModel{S,A,W}
 """
-function generateGeneralPOMDP(ipomdp::IPOMDP{S}, agent::Agent{S,A,W}, model::pomdpModel{S,A,W})
+function generateGeneralPOMDP(ipomdp::IPOMDP, agent::Agent, model::pomdpModel)
     return null
 end
-
-# General pomdp definition
-
-
-
-
-
 
