@@ -1,6 +1,6 @@
 module IPOMDPToolbox
 
-using IPOMDPs
+import IPOMDPs
 
 export
     # IPOMDP model exploration
