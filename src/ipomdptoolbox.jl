@@ -1,27 +1,26 @@
-using IPOMDPs
 """
     Explores an agent with its models
 """
 
-function exploreAgent(suffix::String, a::Agent)
+function exploreAgent(ipomdp::IPOMDP, a::Agent, suffix::String)
     println("Exploring")
     println(suffix * "Exploring agent: " * string(a.name))
-    println(suffix * "- Actions: " * string(actions(a)))
-    println(suffix * "- Observations: " * string(observations(a)))
-    mod = models(a)
+    println(suffix * "- Actions: " * string(IPOMDPs.actions(ipomdp, a)))
+    println(suffix * "- Observations: " * string(IPOMDPs.observations(ipomdp, a)))
+    mod = IPOMDPs.models(ipomdp, a)
     if isa(mod, Array)
         for m in mod
-            exploreModel(suffix, m)
+            exploreModel(ipomdp, m, suffix)
         end
     else
-        exploreModel(suffix, mod)
+        exploreModel(ipomdp, mod, suffix)
     end
 end
 
 """
     Explore the model and all the contained agents
 """
-function exploreModel(suffix::String, m::Model)
+function exploreModel(ipomdp::IPOMDP, m::Model, suffix::String)
     if(isa(m, SubintentionalModel))
         println(suffix * "- Subintentional model")
     elseif(isa(m, IntentionalModel))
@@ -30,14 +29,14 @@ function exploreModel(suffix::String, m::Model)
             println(suffix * "- POMDP")
         elseif(isa(m, iModel))
             println(suffix * "- I-POMDP, Exploring..")
-            ags = agents(m)
+            ags = IPOMDPs.agents(ipomdp, m)
             suffix = suffix * "    "
             if isa(ags, Array)
                 for a in ags
-                    exploreAgent(suffix, a)
+                    exploreAgent(ipomdp, a, suffix)
                 end
             else
-                exploreAgent(suffix, ags)
+                exploreAgent(ipomdp, ags, suffix)
             end
         else
             println(suffix * "Intentional model not recognized")
@@ -60,7 +59,7 @@ end
 # Find element X in the array V
 function find(V::Vector{Agent}, X::Agent)
     for (i,e) in enumerate(X)
-        if(e == X)
+        if e == X
             return i
         end
     end
@@ -69,7 +68,7 @@ end
 
 function find(V::Vector{Model}, X::Model)
     for (i,e) in enumerate(X)
-        if(e == X)
+        if e == X
             return i
         end
     end

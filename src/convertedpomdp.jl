@@ -1,13 +1,9 @@
-using POMDPs
-using IPOMDPs
 #Conversion of a IPOMDP{S}, Agent{S,A,W} and pomdpModel{S,A,W} in a pomdp
 struct cPOMDP <: POMDP{Any, Any, Any}
     ipomdp::IPOMDP
     agent::Agent
     model::pomdpModel
 end
-
-
 
 function POMDPs.states(c::cPOMDP)
     return IPOMDPs.states(c.ipomdp)
