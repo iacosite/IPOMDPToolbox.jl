@@ -60,9 +60,3 @@ end
 function POMDPs.reward(c::cPOMDP, from::Any, action::Any)
     return IPOMDPs.reward(c.ipomdp, c.model, s, a)
 end
-
-function POMDPs.initial_state_distribution(c::cPOMDP)
-    return IPOMDPs.initial_state_distribution(c.ipomdps, c.model)
-end
-
-
