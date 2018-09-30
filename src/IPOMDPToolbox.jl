@@ -5,6 +5,7 @@ using POMDPs
 
 export
     # IPOMDP model exploration
+    exploreProblem,
     exploreAgent,
     exploreModel,
 

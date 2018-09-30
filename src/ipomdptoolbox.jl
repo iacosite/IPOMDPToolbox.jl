@@ -1,4 +1,13 @@
 """
+    Explores a IPOMDP problem
+"""
+
+function exploreProblem(ipomdp::IPOMDP)
+    i = IPOMDPs.agents(ipomdp)
+    exploreAgent(ipomdp, i, "")
+end
+
+"""
     Explores an agent with its models
 """
 
