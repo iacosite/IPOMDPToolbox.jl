@@ -17,8 +17,8 @@ function POMDPs.state_index(c::cPOMDP, s::Any)
     return IPOMDPs.state_index(c.ipomdp, s)
 end
 
-function POMDPs.initial_state_distribution(c::cPOMDP)
-    return IPOMDPs.initial_state_distribution(c.ipomdp, c.frame)
+function POMDPs.initialstate_distribution(c::cPOMDP)
+    return IPOMDPs.initialstate_distribution(c.ipomdp, c.frame)
 end
 
 function POMDPs.isterminal(c::cPOMDP, s::Any)
