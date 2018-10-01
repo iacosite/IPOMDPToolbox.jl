@@ -29,7 +29,7 @@ end
 """
     Explore the frame and all the contained agents
 """
-function exploreFrame(ipomdp::IPOMDP, m::Model, suffix::String)
+function exploreFrame(ipomdp::IPOMDP, m::Frame, suffix::String)
     if(isa(m, SubintentionalFrame))
         println(suffix * "- Subintentional frame")
     elseif(isa(m, IntentionalFrame))
@@ -65,7 +65,7 @@ function find(V::Vector{Agent}, X::Agent)
     return -1
 end
 
-function find(V::Vector{Frame}, X::Model)
+function find(V::Vector{Frame}, X::Frame)
     for (i,e) in enumerate(X)
         if e == X
             return i
