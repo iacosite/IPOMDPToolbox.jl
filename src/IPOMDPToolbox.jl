@@ -10,7 +10,7 @@ export
     exploreModel,
 
     # IPOMDP to POMDP conversion
-    cPOMDP
+    generatePOMDP
 
 
     include("ipomdptoolbox.jl")

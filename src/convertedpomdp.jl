@@ -60,3 +60,13 @@ end
 function POMDPs.reward(c::cPOMDP, from::Any, action::Any)
     return IPOMDPs.reward(c.ipomdp, c.model, s, a)
 end
+
+"""
+    Generate a GeneralPOMDP object from
+        IPOMDP{S}
+        Agent{S,A,W}
+        pomdpModel{S,A,W}
+"""
+function generatePOMDP(ipomdp::IPOMDP, agent::Agent, model::pomdpModel)
+    return generalPOMDP(ipomdp, agent, model)
+end

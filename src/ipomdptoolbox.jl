@@ -55,16 +55,6 @@ function exploreModel(ipomdp::IPOMDP, m::Model, suffix::String)
     end
 end
 
-"""
-    Generate a GeneralPOMDP object from
-        IPOMDP{S}
-        Agent{S,A,W}
-        pomdpModel{S,A,W}
-"""
-function generateGeneralPOMDP(ipomdp::IPOMDP, agent::Agent, model::pomdpModel)
-    return null
-end
-
 # Find element X in the array V
 function find(V::Vector{Agent}, X::Agent)
     for (i,e) in enumerate(X)
@@ -83,3 +73,5 @@ function find(V::Vector{Model}, X::Model)
     end
     return -1
 end
+
+
