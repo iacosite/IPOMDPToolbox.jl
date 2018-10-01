@@ -7,7 +7,7 @@ export
     # IPOMDP model exploration
     exploreProblem,
     exploreAgent,
-    exploreModel,
+    exploreFrame,
 
     # IPOMDP to POMDP conversion
     generalPOMDP,
