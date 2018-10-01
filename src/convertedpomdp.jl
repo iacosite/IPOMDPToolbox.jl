@@ -68,5 +68,5 @@ end
         pomdpModel{S,A,W}
 """
 function generatePOMDP(ipomdp::IPOMDP, agent::Agent, model::pomdpModel)
-    return generalPOMDP(ipomdp, agent, model)
+    return cPOMDP(ipomdp, agent, model)
 end
