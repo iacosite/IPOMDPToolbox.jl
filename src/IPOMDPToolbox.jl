@@ -10,6 +10,7 @@ export
     exploreModel,
 
     # IPOMDP to POMDP conversion
+    generalPOMDP,
     generatePOMDP
 
 
