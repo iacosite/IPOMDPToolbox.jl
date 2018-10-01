@@ -8,7 +8,7 @@ function exploreProblem(ipomdp::IPOMDP)
 end
 
 """
-    Explores an agent with its models
+    Explores an agent with its frames
 """
 
 function exploreAgent(ipomdp::IPOMDP, a::Agent, suffix::String)
@@ -16,27 +16,27 @@ function exploreAgent(ipomdp::IPOMDP, a::Agent, suffix::String)
     println(suffix * "Exploring agent: " * string(a.name))
     println(suffix * "- Actions: " * string(IPOMDPs.actions(ipomdp, a)))
     println(suffix * "- Observations: " * string(IPOMDPs.observations(ipomdp, a)))
-    mod = IPOMDPs.models(ipomdp, a)
+    mod = IPOMDPs.frames(ipomdp, a)
     if isa(mod, Array)
         for m in mod
-            exploreModel(ipomdp, m, suffix)
+            exploreFrame(ipomdp, m, suffix)
         end
     else
-        exploreModel(ipomdp, mod, suffix)
+        exploreFrame(ipomdp, mod, suffix)
     end
 end
 
 """
-    Explore the model and all the contained agents
+    Explore the frame and all the contained agents
 """
-function exploreModel(ipomdp::IPOMDP, m::Model, suffix::String)
-    if(isa(m, SubintentionalModel))
-        println(suffix * "- Subintentional model")
-    elseif(isa(m, IntentionalModel))
-        println(suffix * "- Intentional model")
-        if(isa(m, pomdpModel))
+function exploreFrame(ipomdp::IPOMDP, m::Model, suffix::String)
+    if(isa(m, SubintentionalFrame))
+        println(suffix * "- Subintentional frame")
+    elseif(isa(m, IntentionalFrame))
+        println(suffix * "- Intentional frame")
+        if(isa(m, pomdpFrame))
             println(suffix * "- POMDP")
-        elseif(isa(m, ipomdpModel))
+        elseif(isa(m, ipomdpFrame))
             println(suffix * "- I-POMDP, Exploring..")
             ags = IPOMDPs.agents(ipomdp, m)
             suffix = suffix * "    "
@@ -48,7 +48,7 @@ function exploreModel(ipomdp::IPOMDP, m::Model, suffix::String)
                 exploreAgent(ipomdp, ags, suffix)
             end
         else
-            println(suffix * "Intentional model not recognized")
+            println(suffix * "Intentional frame not recognized")
         end
     else
         println(suffix * "Type not recognized: " * string(typeof(m)))
@@ -65,7 +65,7 @@ function find(V::Vector{Agent}, X::Agent)
     return -1
 end
 
-function find(V::Vector{Model}, X::Model)
+function find(V::Vector{Frame}, X::Model)
     for (i,e) in enumerate(X)
         if e == X
             return i

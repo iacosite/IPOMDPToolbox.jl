@@ -1,8 +1,8 @@
-#Conversion of a IPOMDP{S}, Agent{S,A,W} and pomdpModel{S,A,W} in a pomdp
+#Conversion of a IPOMDP{S}, Agent{S,A,W} and pomdpFrame{S,A,W} in a pomdp
 struct cPOMDP <: POMDP{Any, Any, Any}
     ipomdp::IPOMDP
     agent::Agent
-    model::pomdpModel
+    frame::pomdpFrame
 end
 
 function POMDPs.states(c::cPOMDP)
@@ -18,7 +18,7 @@ function POMDPs.state_index(c::cPOMDP, s::Any)
 end
 
 function POMDPs.initial_state_distribution(c::cPOMDP)
-    return IPOMDPs.initial_state_distribution(c.ipomdp, c.model)
+    return IPOMDPs.initial_state_distribution(c.ipomdp, c.frame)
 end
 
 function POMDPs.isterminal(c::cPOMDP, s::Any)
@@ -50,23 +50,23 @@ function POMDPs.obs_index(c::cPOMDP, observation::Any)
 end
 
 function POMDPs.transition(c::cPOMDP, from::Any, action::Any)
-    return IPOMDPs.transition(c.ipomdp, c.model, from, action)
+    return IPOMDPs.transition(c.ipomdp, c.frame, from, action)
 end
 
 function POMDPs.observation(c::cPOMDP, action::Any, to::Any)
-    return IPOMDPs.observation(c.ipomdp, c.model, c.action, to)
+    return IPOMDPs.observation(c.ipomdp, c.frame, c.action, to)
 end
 
 function POMDPs.reward(c::cPOMDP, from::Any, action::Any)
-    return IPOMDPs.reward(c.ipomdp, c.model, s, a)
+    return IPOMDPs.reward(c.ipomdp, c.frame, s, a)
 end
 
 """
     Generate a GeneralPOMDP object from
         IPOMDP{S}
         Agent{S,A,W}
-        pomdpModel{S,A,W}
+        pomdpFrame{S,A,W}
 """
-function generatePOMDP(ipomdp::IPOMDP, agent::Agent, model::pomdpModel)
-    return cPOMDP(ipomdp, agent, model)
+function generatePOMDP(ipomdp::IPOMDP, agent::Agent, frame::pomdpFrame)
+    return cPOMDP(ipomdp, agent, frame)
 end
