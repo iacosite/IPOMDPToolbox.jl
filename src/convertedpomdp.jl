@@ -13,8 +13,8 @@ function POMDPs.n_states(c::cPOMDP)
     return IPOMDPs.n_states(c.ipomdp)
 end
 
-function POMDPs.state_index(c::cPOMDP, s::Any)
-    return IPOMDPs.state_index(c.ipomdp, s)
+function POMDPs.stateindex(c::cPOMDP, s::Any)
+    return IPOMDPs.stateindex(c.ipomdp, s)
 end
 
 function POMDPs.initialstate_distribution(c::cPOMDP)
@@ -33,8 +33,8 @@ function POMDPs.n_actions(c::cPOMDP)
     return IPOMDPs.n_actions(c.ipomdp, c.agent)
 end
 
-function POMDPs.action_index(c::cPOMDP, action::Any)
-    return IPOMDPs.action_index(c.ipomdp, c.agent, action)
+function POMDPs.actionindex(c::cPOMDP, action::Any)
+    return IPOMDPs.actionindex(c.ipomdp, c.agent, action)
 end
 
 function POMDPs.observations(c::cPOMDP)
@@ -45,8 +45,8 @@ function POMDPs.n_observations(c::cPOMDP)
     return IPOMDPs.n_observations(c.ipomdp, c.agent)
 end
 
-function POMDPs.obs_index(c::cPOMDP, observation::Any)
-    return IPOMDPs.observation_index(c.ipomdp, c.agent, observation)
+function POMDPs.obsindex(c::cPOMDP, observation::Any)
+    return IPOMDPs.observationindex(c.ipomdp, c.agent, observation)
 end
 
 function POMDPs.transition(c::cPOMDP, from::Any, action::Any)
@@ -67,6 +67,6 @@ end
         Agent{S,A,W}
         pomdpFrame{S,A,W}
 """
-function generatePOMDP(ipomdp::IPOMDP, agent::Agent, frame::pomdpFrame)
+function generatePOMDP(ipomdp::IPOMDP{S}, agent::Agent{S,A,W}, frame::pomdpFrame{S,A,W}) where {S,A,W}
     return cPOMDP(ipomdp, agent, frame)
 end

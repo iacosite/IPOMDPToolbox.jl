@@ -2,6 +2,8 @@ module IPOMDPToolbox
 
 using IPOMDPs
 using POMDPs
+using SARSOP
+using BeliefUpdaters
 
 export
     # IPOMDP model exploration
