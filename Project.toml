@@ -5,4 +5,6 @@ version = "0.1.0"
 
 [deps]
 IPOMDPs = "400b8fa6-c29f-11e8-147f-97038bb7f9c1"
+POMDPModelTools = "08074719-1b2a-587c-a292-00f91cc44415"
 POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
+SARSOP = "cef570c6-3a94-5604-96b7-1a5e143043f2"

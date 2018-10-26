@@ -1,21 +1,16 @@
 module IPOMDPToolbox
 
-using IPOMDPs
 using POMDPs
+using IPOMDPs
 using SARSOP
-using BeliefUpdaters
+using POMDPModelTools
 
 export
-    # IPOMDP model exploration
-    exploreProblem,
-    exploreAgent,
-    exploreFrame,
-
-    # IPOMDP to POMDP conversion
-    generalPOMDP,
-    generatePOMDP
-
+    pomdpModel,
+    Model,
+    action,
+    tau,
+    actionP
 
     include("ipomdptoolbox.jl")
-    include("convertedpomdp.jl")
 end
