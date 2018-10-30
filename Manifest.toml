@@ -4,13 +4,6 @@ git-tree-sha1 = "1ce1ce9984683f0b6a587d5bdbc688ecb480096f"
 uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
 version = "0.3.0"
 
-[[AutoAligns]]
-git-tree-sha1 = "5c08bc17f0f0b051a0b5a28664d1432e1c5ce6f7"
-repo-rev = "master"
-repo-url = "git://github.com/tpapp/AutoAligns.jl.git"
-uuid = "9eadff86-3e88-5017-babf-a54584f26cc8"
-version = "0.0.0"
-
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
@@ -63,7 +56,7 @@ uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
 version = "0.16.4"
 
 [[IPOMDPs]]
-git-tree-sha1 = "fc5e7daab330d306ec39f4f2f8cb64d6259658cd"
+git-tree-sha1 = "e794817850f8515b07e07c53d238c27c4964bcf0"
 repo-rev = "master"
 repo-url = "IPOMDPs"
 uuid = "400b8fa6-c29f-11e8-147f-97038bb7f9c1"

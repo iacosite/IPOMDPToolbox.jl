@@ -4,7 +4,6 @@ using POMDPs
 using IPOMDPs
 using SARSOP
 using POMDPModelTools
-using AutoAligns
 
 export
     pomdpModel,

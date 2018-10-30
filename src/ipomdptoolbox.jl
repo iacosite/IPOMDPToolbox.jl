@@ -520,6 +520,91 @@ function xObservation(model::ipomdpModel)
     return Ox
 end
 
+# AutoAligns
+# function printPOMDP(pomdp::POMDP)
+#     println("States:")
+#     for s in POMDPs.states(pomdp)
+#         i = POMDPs.stateindex(pomdp, s)
+#         println("[$i] $s ")
+#     end
+#     println
+#
+#     println("Actions:")
+#     for a in POMDPs.actions(pomdp)
+#         i = POMDPs.actionindex(pomdp, a)
+#         println("[$i] $a ")
+#     end
+#     println
+#
+#     println("Observations")
+#     for o in POMDPs.observations(pomdp)
+#         i = POMDPs.obsindex(pomdp, o)
+#         println("[$i] $o ")
+#     end
+#     println
+#
+#     t = AutoAlign(align = Dict(1 => left, :default => right))
+#     println("Transition function:")
+#     print(t, "T")
+#     for sp in POMDPs.states(pomdp)
+#         print(t,"  ", sp)
+#     end
+#     println(t)
+#     for s in POMDPs.states(pomdp)
+#         for a in POMDPs.actions(pomdp)
+#             print(t, "[$s,$a]")
+#             dist = POMDPs.transition(pomdp, s, a)
+#             for sp in POMDPs.states(pomdp)
+#                 p = POMDPModelTools.pdf(dist, sp)
+#                 print(t,"  ", "$p")
+#             end
+#             println(t)
+#         end
+#     end
+#     print(STDOUT, t)
+#     println
+#
+#     ol = AutoAlign(align = Dict(1 => left, :default => right))
+#     println("Observation function:")
+#     print(ol, "O")
+#     for o in POMDPs.observations(pomdp)
+#         print(ol, "  ",o)
+#     end
+#     println(ol)
+#     for sp in POMDPs.states(pomdp)
+#         for a in POMDPs.actions(pomdp)
+#             print(ol, "[$sp,$a]")
+#             dist = POMDPs.observation(pomdp, a, sp)
+#             for o in POMDPs.observations(pomdp)
+#                 p = POMDPModelTools.pdf(dist, o)
+#                 print(ol, "  ", p)
+#             end
+#             println(ol)
+#         end
+#     end
+#     print(STDOUT, ol)
+#     println
+#
+#     rl = AutoAlign(align = Dict(1 => left, :default => right))
+#     println("Reward function:")
+#     print(tl, "R")
+#     for sp in POMDPs.states(pomdp)
+#         print(rl, "  ", sp)
+#     end
+#     println(rl)
+#     for a in POMDPs.actions(pomdp)
+#         print(rl, "[$a]")
+#         for s in POMDPs.states(pomdp)
+#             r = POMDPs.reward(pomdp, s ,a)
+#             print(rl, "  ", r)
+#         end
+#         println(rl)
+#     end
+#     print(STDOUT, rl)
+#     println
+# end
+
+
 
 function printPOMDP(pomdp::POMDP)
     println("States:")
@@ -543,66 +628,57 @@ function printPOMDP(pomdp::POMDP)
     end
     println
 
-    t = AutoAlign(align = Dict(1 => left, :default => right))
     println("Transition function:")
-    print(t, "T")
+    print("T\t")
     for sp in POMDPs.states(pomdp)
-        print(t,"  ", sp)
+        print("$sp\t")
     end
-    println(t)
+    println
     for s in POMDPs.states(pomdp)
         for a in POMDPs.actions(pomdp)
-            print(t, "[$s,$a]")
+            print("[$s,$a]")
             dist = POMDPs.transition(pomdp, s, a)
             for sp in POMDPs.states(pomdp)
                 p = POMDPModelTools.pdf(dist, sp)
-                print(t,"  ", "$p")
+                print("$p\t")
             end
-            println(t)
+            println
         end
     end
-    print(STDOUT, t)
     println
 
-    ol = AutoAlign(align = Dict(1 => left, :default => right))
     println("Observation function:")
-    print(ol, "O")
+    print("O")
     for o in POMDPs.observations(pomdp)
-        print(ol, "  ",o)
+        print("\t$o")
     end
-    println(ol)
+    println
     for sp in POMDPs.states(pomdp)
         for a in POMDPs.actions(pomdp)
-            print(ol, "[$sp,$a]")
+            print("[$sp,$a]")
             dist = POMDPs.observation(pomdp, a, sp)
             for o in POMDPs.observations(pomdp)
                 p = POMDPModelTools.pdf(dist, o)
-                print(ol, "  ", p)
+                print("$p\t")
             end
-            println(ol)
+            println
         end
     end
-    print(STDOUT, ol)
     println
 
-    rl = AutoAlign(align = Dict(1 => left, :default => right))
     println("Reward function:")
-    print(tl, "R")
+    print("R")
     for sp in POMDPs.states(pomdp)
-        print(rl, "  ", sp)
+        print("\t$sp")
     end
-    println(rl)
+    println
     for a in POMDPs.actions(pomdp)
-        print(rl, "[$a]")
+        print("[$a]")
         for s in POMDPs.states(pomdp)
             r = POMDPs.reward(pomdp, s ,a)
-            print(rl, "  ", r)
+            print("$r\t")
         end
-        println(rl)
+        println
     end
-    print(STDOUT, rl)
     println
 end
-
-
-
