@@ -4,13 +4,15 @@ using POMDPs
 using IPOMDPs
 using SARSOP
 using POMDPModelTools
+using AutoAligns
 
 export
     pomdpModel,
     Model,
     action,
     tau,
-    actionP
+    actionP,
+    printPOMDP
 
     include("ipomdptoolbox.jl")
 end
