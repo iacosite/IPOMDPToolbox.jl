@@ -5,14 +5,14 @@
 
 
 struct pomdpModel{S,A,W} <: IPOMDPs.Model{A,W}
-    history
+    history::DiscreteBelief
 
     # Immutable part of the structure! This is commo to all the models of the same frame!
     frame::POMDP{S,A,W}
 
     # Data
-    updater
-    policy
+    updater::DiscreteUpdater
+    policy::POMDPPolicy
 
 end
 

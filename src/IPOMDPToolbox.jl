@@ -4,6 +4,7 @@ using POMDPs
 using IPOMDPs
 using SARSOP
 using POMDPModelTools
+using BeliefUpdaters
 
 export
     pomdpModel,
