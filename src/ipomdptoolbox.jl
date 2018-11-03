@@ -127,7 +127,7 @@ modelsData = Dict{gPOMDP, mData}()
 
 function IPOMDPs.action(model::ipomdpModel)
 
-    debug = true
+    debug = false
     # Calculate the converted pomdp
     pomdp = gPOMDP(model)
     if debug
