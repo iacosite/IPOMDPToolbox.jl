@@ -81,7 +81,7 @@ function IPOMDPs.Model(frame::IPOMDP)
         end
     end
     # Perform cartesian product
-    frameProbs = initialframe_distribution(frame)
+    frameProbs = IPOMDPs.initialframe_distribution(frame)
     partialBelief = SparseCat([Vector{Model}()], [1.0])
 
    # Primo elemento: Symbol, altri Model -> Creare 2 array diversi per mantenere il tipo!
@@ -118,18 +118,71 @@ function IPOMDPs.Model(frame::IPOMDP)
     return ipomdpModel(belief, frame)
 end
 
+struct mData
+    id
+    e_policy
+    belief
+end
+
+modelsData = Dict{gPOMDP, mData}()
+
 function IPOMDPs.action(model::ipomdpModel)
+
+    debug = true
     # Calculate the converted pomdp
     pomdp = gPOMDP(model)
-    printPOMDP(pomdp)
-    policy = SARSOP.POMDPPolicy(pomdp, "test.policy")
-    solver = SARSOP.SARSOPSolver()
-    e_policy = POMDPs.solve(solver, pomdp, policy, pomdp_file_name="test.pomdpx")
+    if debug
+        printPOMDP(pomdp)
+    end
+    #Two ipomdpModel are equal if their frame is the same and their history is identical
+    found = false
+    e_policy = nothing
+    belief = nothing
+    if debug
+        for (k,v) in modelsData
+            println("K:")
+            dump(k)
+            println("Data:")
+            dump(v)
+        end
+        println("To check with:")
+        dump(pomdp)
+    end
+    for (g,v) in modelsData
+        if isa(g.model.frame, typeof(pomdp.model.frame))
+        if myApprox(g.model.history, pomdp.model.history)
+            e_policy = v.e_policy
+            belief = v.belief
+            found = true
+            if debug
+                println("Already calculated!")
+            end
+            break
+        end
+        end
+    end
+    if !found
+        #policy = SARSOP.POMDPPolicy(pomdp, "$(IPOMDPToolbox.counter).policy")
+        policy = SARSOP.POMDPPolicy(pomdp, "test.policy")
+        solver = SARSOP.SARSOPSolver()
+        #e_policy = POMDPs.solve(solver, pomdp, policy, pomdp_file_name="$(IPOMDPToolbox.counter).pomdpx")
+        e_policy = POMDPs.solve(solver, pomdp, policy, pomdp_file_name="test.pomdpx")
 
-    # We obtain the belief state from the initial belief od the pomdp problem
-    updater = SARSOP.updater(e_policy)
-    belief = SARSOP.initialize_belief(updater, POMDPs.initialstate_distribution(pomdp))
+        # We obtain the belief state from the initial belief od the pomdp problem
+        updater = SARSOP.updater(e_policy)
+        belief = SARSOP.initialize_belief(updater, POMDPs.initialstate_distribution(pomdp))
 
+        #modelsData[pomdp] = mData(IPOMDPToolbox.counter, e_policy, belief)
+        modelsData[pomdp] = mData(1, e_policy, belief)
+        #IPOMDPToolbox.counter = IPOMDPToolbox.counter + 1
+        #println("Counter: $IPOMDPToolbox.counter")
+    end
+    if debug
+        println("Policy:")
+        dump(e_policy)
+        println("Belief:")
+        dump(belief)
+    end
     return SARSOP.action(e_policy, belief)
 end
 
@@ -371,20 +424,30 @@ function POMDPs.observation(g::gPOMDP{S,A,W}, action::A, to::S) where {S,A,W}
 end
 
 function POMDPs.reward(g::gPOMDP{S,A,W}, from::S, action::A) where {S,A,W}
-    Ax = xAction(g.model, action)
+    # Implements:
+    # Sum_(Ax)( Sum_(Mx)( Prod_(m E mx)( P(am|m) )*P(mx) ) )/P(s)
 
-    result = 0
-    for a in Ax
-        for (iS, p) in g.model.history
-            aP = 1
-            for m in iS.models
-                aP = aP * actionP(m, a[IPOMDPs.agent(m.frame)])
+
+
+    Ax = xAction(g.model, action)
+    result = 0.0
+    normal = 0.0
+    for (iS, p) in g.model.history
+        if (iS.state == from)
+            normal = normal + p
+            for a in Ax
+                aP = 1.0
+                for m in iS.models
+                    tmp = actionP(m, a[IPOMDPs.agent(m.frame)])
+                 #   println("P($(IPOMDPs.agent(m.frame))->$(a[IPOMDPs.agent(m.frame)])): $tmp")
+                    aP = aP * tmp
+                end
+                result = result + IPOMDPs.reward(g.model.frame, iS, a) * aP * p
             end
-            result = result + IPOMDPs.reward(g.model.frame, iS, a) + (aP * p)
         end
     end
 
-    return result
+    return result/normal
 end
 
 
@@ -413,26 +476,22 @@ function myApprox(a,b; maxdepth=20, debug=false)
     end
     if (maxdepth > 0)
 
-        # Check if the object is iterable: In case it is iterable MUST implement these functions
-        it = true
-        it = it && applicable(iterate, a) && applicable(iterate, b)
-        #it = it && applicable(next, a, start(a)) && applicable(next, b, start(b))
-        #it = it && applicable(done, a, start(a)) && applicable(done, b, start(b))
-        if (it && !isa(a, Number) && !isa(b, Number) && !isa(a, String) && !isa(b, String))
-            # The object is iterable
-
-            # Check each element to be equal in both a and b
+        # Check if the object is iterable: In case it is iterable MUST implement the function iterate
+        if applicable(iterate, a) && applicable(iterate, b)
             result = true
             if (debug)
-                println("Iterator!")
+                println("Iterable!")
             end
             try
-                for i = 1:length(a)
-                    x = a[i]
-                    y = b[i]
-                    result = result && myApprox(x, y; maxdepth=maxdepth-1, debug=debug)
+                c = zip(a,b)
+                for x in c
+                    result = result && myApprox(x[1], x[2]; maxdepth=maxdepth-1, debug=debug)
                 end
-            catch
+            catch y
+                if (debug)
+                    println("Error!")
+                    dump(y)
+                end
                 result = false
             end
             return result
@@ -520,165 +579,79 @@ function xObservation(model::ipomdpModel)
     return Ox
 end
 
-# AutoAligns
-# function printPOMDP(pomdp::POMDP)
-#     println("States:")
-#     for s in POMDPs.states(pomdp)
-#         i = POMDPs.stateindex(pomdp, s)
-#         println("[$i] $s ")
-#     end
-#     println
-#
-#     println("Actions:")
-#     for a in POMDPs.actions(pomdp)
-#         i = POMDPs.actionindex(pomdp, a)
-#         println("[$i] $a ")
-#     end
-#     println
-#
-#     println("Observations")
-#     for o in POMDPs.observations(pomdp)
-#         i = POMDPs.obsindex(pomdp, o)
-#         println("[$i] $o ")
-#     end
-#     println
-#
-#     t = AutoAlign(align = Dict(1 => left, :default => right))
-#     println("Transition function:")
-#     print(t, "T")
-#     for sp in POMDPs.states(pomdp)
-#         print(t,"  ", sp)
-#     end
-#     println(t)
-#     for s in POMDPs.states(pomdp)
-#         for a in POMDPs.actions(pomdp)
-#             print(t, "[$s,$a]")
-#             dist = POMDPs.transition(pomdp, s, a)
-#             for sp in POMDPs.states(pomdp)
-#                 p = POMDPModelTools.pdf(dist, sp)
-#                 print(t,"  ", "$p")
-#             end
-#             println(t)
-#         end
-#     end
-#     print(STDOUT, t)
-#     println
-#
-#     ol = AutoAlign(align = Dict(1 => left, :default => right))
-#     println("Observation function:")
-#     print(ol, "O")
-#     for o in POMDPs.observations(pomdp)
-#         print(ol, "  ",o)
-#     end
-#     println(ol)
-#     for sp in POMDPs.states(pomdp)
-#         for a in POMDPs.actions(pomdp)
-#             print(ol, "[$sp,$a]")
-#             dist = POMDPs.observation(pomdp, a, sp)
-#             for o in POMDPs.observations(pomdp)
-#                 p = POMDPModelTools.pdf(dist, o)
-#                 print(ol, "  ", p)
-#             end
-#             println(ol)
-#         end
-#     end
-#     print(STDOUT, ol)
-#     println
-#
-#     rl = AutoAlign(align = Dict(1 => left, :default => right))
-#     println("Reward function:")
-#     print(tl, "R")
-#     for sp in POMDPs.states(pomdp)
-#         print(rl, "  ", sp)
-#     end
-#     println(rl)
-#     for a in POMDPs.actions(pomdp)
-#         print(rl, "[$a]")
-#         for s in POMDPs.states(pomdp)
-#             r = POMDPs.reward(pomdp, s ,a)
-#             print(rl, "  ", r)
-#         end
-#         println(rl)
-#     end
-#     print(STDOUT, rl)
-#     println
-# end
-
-
-
 function printPOMDP(pomdp::POMDP)
     println("States:")
     for s in POMDPs.states(pomdp)
         i = POMDPs.stateindex(pomdp, s)
         println("[$i] $s ")
     end
-    println
+    println("")
 
     println("Actions:")
     for a in POMDPs.actions(pomdp)
         i = POMDPs.actionindex(pomdp, a)
         println("[$i] $a ")
     end
-    println
+    println("")
 
     println("Observations")
     for o in POMDPs.observations(pomdp)
         i = POMDPs.obsindex(pomdp, o)
         println("[$i] $o ")
     end
-    println
+    println("")
 
     println("Transition function:")
     print("T\t")
     for sp in POMDPs.states(pomdp)
         print("$sp\t")
     end
-    println
+    println("")
     for s in POMDPs.states(pomdp)
         for a in POMDPs.actions(pomdp)
             print("[$s,$a]")
             dist = POMDPs.transition(pomdp, s, a)
             for sp in POMDPs.states(pomdp)
                 p = POMDPModelTools.pdf(dist, sp)
-                print("$p\t")
+                print("\t$p")
             end
-            println
+            println("")
         end
     end
-    println
+    println("")
 
     println("Observation function:")
     print("O")
     for o in POMDPs.observations(pomdp)
         print("\t$o")
     end
-    println
+    println("")
     for sp in POMDPs.states(pomdp)
         for a in POMDPs.actions(pomdp)
             print("[$sp,$a]")
             dist = POMDPs.observation(pomdp, a, sp)
             for o in POMDPs.observations(pomdp)
                 p = POMDPModelTools.pdf(dist, o)
-                print("$p\t")
+                print("\t$p")
             end
-            println
+            println("")
         end
     end
-    println
+    println("")
 
     println("Reward function:")
     print("R")
     for sp in POMDPs.states(pomdp)
         print("\t$sp")
     end
-    println
+    println("")
     for a in POMDPs.actions(pomdp)
         print("[$a]")
         for s in POMDPs.states(pomdp)
             r = POMDPs.reward(pomdp, s ,a)
-            print("$r\t")
+            print("\t$r")
         end
-        println
+        println("")
     end
-    println
+    println("")
 end
