@@ -33,10 +33,9 @@ end
 #
 
 function IPOMDPs.Model(pomdp::POMDP)
-#TODO: Get frame id from IPOMDPs
-    policy = SARSOP.POMDPPolicy(pomdp, "test.policy")
+    policy = SARSOP.POMDPPolicy(pomdp, "_temp.policy")
     solver = SARSOP.SARSOPSolver()
-    e_policy = POMDPs.solve(solver, pomdp, policy, pomdp_file_name="test.pomdpx")
+    e_policy = POMDPs.solve(solver, pomdp, policy, pomdp_file_name="_temp.pomdpx")
     updater = SARSOP.updater(e_policy)
     belief = SARSOP.initialize_belief(updater, POMDPs.initialstate_distribution(pomdp))
 
@@ -163,10 +162,10 @@ function IPOMDPs.action(model::ipomdpModel)
     end
     if !found
         #policy = SARSOP.POMDPPolicy(pomdp, "$(IPOMDPToolbox.counter).policy")
-        policy = SARSOP.POMDPPolicy(pomdp, "test.policy")
+        policy = SARSOP.POMDPPolicy(pomdp, "_temp.policy")
         solver = SARSOP.SARSOPSolver()
         #e_policy = POMDPs.solve(solver, pomdp, policy, pomdp_file_name="$(IPOMDPToolbox.counter).pomdpx")
-        e_policy = POMDPs.solve(solver, pomdp, policy, pomdp_file_name="test.pomdpx")
+        e_policy = POMDPs.solve(solver, pomdp, policy, pomdp_file_name="_temp.pomdpx")
 
         # We obtain the belief state from the initial belief od the pomdp problem
         updater = SARSOP.updater(e_policy)
