@@ -12,7 +12,17 @@ export
     action,
     tau,
     actionP,
-    printPOMDP
+    printPOMDP,
 
+    DiscreteInteractiveBelief,
+    DiscreteInteractiveUpdater,
+    
+    ReductionSolver,
+    ReductionPolicy
+
+    include("functions.jl")
+    include("interactivebelief.jl")
+    include("gpomdp.jl")
+    include("reductionsolver.jl")
     include("ipomdptoolbox.jl")
 end
