@@ -1,20 +1,22 @@
-#
-# Approximation function
-#
+"""
+    Custom approximation function:
+    This is needed brecause, sometimes, belief differ for very small amounts making them basically identical.
+    This is not intended to be used as a filter function, but as an approximation for equality check
+"""
+# Functions used in order to define whether isapprox() can be used or not
 appr(x::AbstractArray{X}) where {X <: Number} = true
 appr(x::Number) = true
 appr(x) = false
-
 function myApprox(a,b; maxdepth=20, debug=false)
-    # Returns wether two objects are equal:
     # Comparison is implemented: isequal for each field where isapprox is not applicable
     if (debug)
         println("Check depth: $maxdepth")
         dump(a)
         dump(b)
     end
-    if (maxdepth > 0)
 
+    # Bound the depth
+    if (maxdepth > 0)
         # Check if the object is iterable: In case it is iterable MUST implement the function iterate
         if applicable(iterate, a) && applicable(iterate, b)
             result = true
@@ -52,7 +54,7 @@ function myApprox(a,b; maxdepth=20, debug=false)
             return result
         end
     end
-    # We either cannot recurse anymore or the object is not iterable or we are at the bottom of the structure
+    # We either cannot recurse anymore or the object is a primitive object or we are at the bottom of the structure
     if (debug)
         println("Bottom of structure!")
     end
@@ -63,11 +65,13 @@ function myApprox(a,b; maxdepth=20, debug=false)
     end
 end
 
-#
-# Cross product of all possible actions given the current action
-#
+"""
+    Return the cross product of one action with all the possible combinations of actions for the other agents
+Return:
+    Dict{Agent, Any}
+"""
 function xAction(frame::IPOMDP{S,A,W}, a::A) where {S,A,W}
-#function xAction(model::ipomdpModel{S,A,W}, a::A) where {S,A,W}
+    # Determine all the agents present in the IPOMDP
     Agents = Vector{Agent}()
     for f in IPOMDPs.emulated_frames(frame)
         if !(IPOMDPs.agent(f) in Agents)
@@ -75,10 +79,12 @@ function xAction(frame::IPOMDP{S,A,W}, a::A) where {S,A,W}
         end
     end
 
+
     Ax = Vector{Dict{Agent, Any}}()
     d = Dict{Agent, Any}()
     d[IPOMDPs.agent(frame)] = a
     push!(Ax, d)
+    # Cross product for all the actions of all the agents
     for ag in Agents
         newA = Vector{Dict}()
         for crossAction in Ax
@@ -94,11 +100,13 @@ function xAction(frame::IPOMDP{S,A,W}, a::A) where {S,A,W}
     return Ax
 end
 
-#
-# Cross product of all possible observations
-#
+"""
+    Return the cross product of all the possible combinations of observations for the other agents
+Return:
+    Dict{Agent, Any}
+"""
 function xObservation(frame::IPOMDP)
-#function xObservation(model::ipomdpModel)
+    # Determine all the other agents present in the IPOMDP
     Agents = Vector{Agent}()
     for f in IPOMDPs.emulated_frames(frame)
         if !(IPOMDPs.agent(f) in Agents)
@@ -106,11 +114,11 @@ function xObservation(frame::IPOMDP)
         end
     end
 
+    # Cross product for all the observations of all the agents
     Ox = Vector{Dict{Agent, Any}}()
     push!(Ox, Dict{Agent, Any}())
     for ag in Agents
         newO = Vector{Dict{Agent, Any}}()
-
         for crossObservation in Ox
             for agentObservation in IPOMDPs.observations_agent(ag)
                 tmp = deepcopy(crossObservation)
@@ -124,6 +132,9 @@ function xObservation(frame::IPOMDP)
     return Ox
 end
 
+"""
+    Print all the POMDP elements in readable form
+"""
 function printPOMDP(pomdp::POMDP)
     println("Belief:")
     b = POMDPs.initialstate_distribution(pomdp)

@@ -7,16 +7,31 @@ struct DiscreteInteractiveUpdater{S,A,W}
     ipomdp::IPOMDP{S,A,W}
 end
 
+
+"""
+    Initialize the belief for a given IPOMDP
+    initialize_belief(up::DiscreteInteractiveUpdater)
+Return:
+    DiscreteInteractiveBelief{S,A,W}
+"""
 function initialize_belief(up::DiscreteInteractiveUpdater)
     statedist = IPOMDPs.initialstate_distribution(up.ipomdp)
     framesdist = IPOMDPs.initialframe_distribution(up.ipomdp)
+    # Call more general function
     return initialize_belief(up, statedist, framesdist)
 end
 
+
+"""
+    Initialize the belief given the state and frame distributions
+    initialize_belief(up::DiscreteInteractiveUpdater{S,A,W}, statedist::SparseCat{Vector{S},Vector{Float64}}, framesdist::SparseCat)
+Return:
+    DiscreteInteractiveBelief{S,A,W}
+"""
 function initialize_belief(up::DiscreteInteractiveUpdater{S,A,W}, statedist::SparseCat{Vector{S},Vector{Float64}}, framesdist::SparseCat) where {S,A,W}
 
+    # Divide all the frames depending on their agent and create the models
     aFrames = Dict{Agent, Vector{Model}}()
-    # Divide all the frames depending on their agent. Create the models
     for (f, p) in framesdist
         if !haskey(aFrames, agent(f))
             # Insert
@@ -26,10 +41,10 @@ function initialize_belief(up::DiscreteInteractiveUpdater{S,A,W}, statedist::Spa
             push!(aFrames[agent(f)], Model(f))
         end
     end
-    # Perform cartesian product
-    partialBelief = SparseCat([Vector{Model}()], [1.0])
+    # We now have all the models divided by their agent
 
-   # Primo elemento: Symbol, altri Model -> Creare 2 array diversi per mantenere il tipo!
+    # Perform cartesian product between the models of all the agents
+    partialBelief = SparseCat([Vector{Model}()], [1.0])
     for (a, fModels) in aFrames
         newP = Vector{Float64}()
         newM = Vector{Vector{Model}}()
@@ -45,9 +60,9 @@ function initialize_belief(up::DiscreteInteractiveUpdater{S,A,W}, statedist::Spa
         end
         partialBelief = SparseCat(newM, newP)
     end
-    # we have now the complete distribution among all the interactive states.
-    # We need now to convert the array of state, models in an interactive stae itself
+    # We now have all the models combinations. One model per agent
 
+    # Perform cartesian product between physical states and the models combinations, obtaining the Interactive states
     iStates = Vector{IS}()
     iProbs = Vector{Float64}()
     for (sv,sp) in statedist
@@ -58,14 +73,27 @@ function initialize_belief(up::DiscreteInteractiveUpdater{S,A,W}, statedist::Spa
     end
     belief = SparseCat(iStates, iProbs)
 
+    # Create and return the belief
     return DiscreteInteractiveBelief(up.ipomdp, belief)
 end
 
+
+"""
+    Performs IPOMDP belief update
+    update(up::DiscreteInteractiveUpdater{S,A,W}, b::DiscreteInteractiveBelief{S,A,W}, a::A, o::W) where {S,A,W}
+Return:
+    DiscreteInteractiveBelief{S,A,W}
+"""
 function update(up::DiscreteInteractiveUpdater{S,A,W}, b::DiscreteInteractiveBelief{S,A,W}, a::A, o::W) where {S,A,W}
 
+    # Determine cross product between all other agent actions and ai, all other agent observations
     Ax = xAction(up.ipomdp, a)
     Ox = xObservation(up.ipomdp)
 
+    # Branch on the interactive state on possible:
+    # - states
+    # - agents actions
+    # - agents observations
     newIS = Vector{IS}()
     newP = Vector{Float64}()
     for (is, Pis) in b.dist
@@ -74,6 +102,7 @@ function update(up::DiscreteInteractiveUpdater{S,A,W}, b::DiscreteInteractiveBel
                 for ox in Ox
                     newModels = Vector{Model}()
                     P = 1
+                    # for the branch, calculate the probability for each to make a certain action and receive a certain observation
                     for m in is.models
                         ta = ax[agent(m.frame)]
                         to = ox[agent(m.frame)]
@@ -82,10 +111,8 @@ function update(up::DiscreteInteractiveUpdater{S,A,W}, b::DiscreteInteractiveBel
                         pa = actionP(m, ta)
                         po = POMDPModelTools.pdf(IPOMDPs.model_observation(up.ipomdp, m.frame, s, ax), to)
                         P = P * pa * po
-                        #  println("P($ta|J)=$pa")
-                        #  println("Oj($s,$(values(ax)),$to)=$po")
-                        #  println("Tau ($ta, $to)")
                     end
+                    # Weight on I's transition and observation probabilities for s and oi
                     ti = POMDPModelTools.pdf(IPOMDPs.transition(up.ipomdp, is.state, ax), s)
                     oi = POMDPModelTools.pdf(IPOMDPs.observation(up.ipomdp, is.state, ax), o)
                     P = P * ti * oi * Pis
@@ -93,17 +120,12 @@ function update(up::DiscreteInteractiveUpdater{S,A,W}, b::DiscreteInteractiveBel
                     if P > 0.0
                         push!(newIS, tis)
                         push!(newP, P)
-                        #  println("Ti($(is.state),$(values(ax)),$s)= $ti")
-                        #  println("Oi($s,$(values(ax)),$(o))=$oi")
-                        #  println("P(is-1)=$Pis")
-                        #  println("P(is) = $P")
-                        #  dump(tis)
                     end
-                    #  print("\n\n")
                 end
             end
         end
     end
+    # We now have all the combinations calculated before weighted for the relative probabilities. There are numerous duplicates
 
     # Remove duplicates
     seenIS = Vector{IS}()
@@ -129,11 +151,12 @@ function update(up::DiscreteInteractiveUpdater{S,A,W}, b::DiscreteInteractiveBel
         end
     end
 
-    # Normalize P
+    # Normalize
     for (i,v) in enumerate(seenP)
         seenP[i] = v/tot
     end
 
+    # Create the new belief and return
     belief = DiscreteInteractiveBelief(b.ipomdp, SparseCat(seenIS, seenP))
     return belief
 end
