@@ -5,13 +5,11 @@ using IPOMDPs
 using SARSOP
 using POMDPModelTools
 using BeliefUpdaters
-
+import Base: (==)
 export
     pomdpModel,
-    Model,
-    action,
-    tau,
-    actionP,
+    ipomdpModel,
+    
     printPOMDP,
 
     DiscreteInteractiveBelief,
@@ -20,9 +18,9 @@ export
     ReductionSolver,
     ReductionPolicy
 
-    include("functions.jl")
     include("interactivebelief.jl")
     include("gpomdp.jl")
     include("reductionsolver.jl")
     include("ipomdptoolbox.jl")
+    include("functions.jl")
 end

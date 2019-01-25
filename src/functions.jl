@@ -1,12 +1,130 @@
 """
     Custom approximation function:
     This is needed brecause, sometimes, belief differ for very small amounts making them basically identical.
-    This is not intended to be used as a filter function, but as an approximation for equality check
+    This is not intended to be used as a filter function, but as an approximation for equality check.
+    Checks:
+    - DiscreteBelief
+    - DiscreteInteractiveBelief
+    - IS
+    - pomdpModel
+    - ipomdpModel
+    - unknown structures
 """
 # Functions used in order to define whether isapprox() can be used or not
 appr(x::AbstractArray{X}) where {X <: Number} = true
 appr(x::Number) = true
 appr(x) = false
+
+# TODO: It would be great if myApprox checks the arrays to actually contain the same elements, no matter the order
+# This should move from O(n) to O(n^2)
+function myApprox(a::DiscreteBelief, b::DiscreteBelief;maxdepth=20,debug=false)
+    if !(isequal(a.state_list, b.state_list))
+        if (debug)
+            println("DiscreteBelief.states: $(a.state_list) != $(b.state_list)")
+        end
+        return false
+    end
+    if (debug)
+        println("DiscreteBelief.states: $(a.state_list) == $(b.state_list)")
+    end
+    if length(a.b) != length(b.b)
+        if (debug)
+            println("DiscreteBelief.belief.length: $(a.b) != $(b.b)")
+        end
+        return false
+    end
+    if (debug)
+        println("DiscreteBelief.belief.length: $(a.b) == $(b.b)")
+    end
+    if !(isapprox(a.b, b.b))
+        if (debug)
+            println("DiscreteBelief.belief: $(a.b) != $(b.b)")
+        end
+        return false
+    end
+    if (debug)
+        println("DiscreteBelief.belief: $(a.b) == $(b.b)")
+    end
+    return true
+end
+
+function myApprox(a::DiscreteInteractiveBelief, b::DiscreteInteractiveBelief;maxdepth=20,debug=false)
+    if (maxdepth == 0)
+        println("DiscreteInteractiveBelief: Max depth reached")
+        return false
+    end
+    if length(a.dist.probs) != length(b.dist.probs)
+        if(debug)
+            println("DiscreteInteractiveBelief.probs.length: $(a.dist.probs) != $(b.dist.probs)")
+        end
+        return false
+    end
+    if(debug)
+        println("DiscreteInteractiveBelief.probs.length: $(a.dist.probs) == $(b.dist.probs)")
+    end
+    if !isapprox(a.dist.probs, b.dist.probs)
+        if(debug)
+            println("DiscreteInteractiveBelief.probs: $(a.dist.probs) != $(b.dist.probs)")
+        end
+        return false
+    end
+    if(debug)
+        println("DiscreteInteractiveBelief.probs: $(a.dist.probs) == $(b.dist.probs)")
+    end
+
+    for (x,y) in zip(a.dist.vals, b.dist.vals)
+        if !(myApprox(x,y;maxdepth=maxdepth-1, debug=debug))
+            return false
+        end
+    end
+    return true
+end
+
+function myApprox(a::IS, b::IS; maxdepth=20, debug=false)
+    if (maxdepth == 0)
+        println("IS: Max depth reached")
+        return false
+    end
+    if !isequal(a.state, b.state)
+        if(debug)
+            println("IS.state: $(a.state) != $(b.state)")
+        end
+        return false
+    end
+    if(debug)
+        println("IS.state: $(a.state) == $(b.state)")
+    end
+
+    for (x,y) in zip(a.models, b.models)
+        if !(myApprox(x, y; maxdepth=maxdepth-1, debug=debug))
+            return false
+        end
+    end
+    return true
+end
+
+function myApprox(a::X, b::X; maxdepth=20, debug=false) where {X<:Union{pomdpModel, ipomdpModel}}
+    if (maxdepth == 0)
+        if(debug)
+            println("pomdpModel/ipompModel: Max depth reached")
+        end
+        return false
+    end
+    if !isa(a.frame, typeof(b.frame))
+        if(debug)
+            println("pomdpModel/ipompModel.frame: $(a.frame) != $(b.frame)")
+        end
+        return false
+    end
+    if(debug)
+        println("pomdpModel/ipompModel.frame: $(a.frame) == $(b.frame)")
+    end
+
+    return myApprox(a.history, b.history;maxdepth=maxdepth-1, debug=debug)
+end
+
+# This method should never be invoked
+# TODO: Test ^ and remove in case
 function myApprox(a,b; maxdepth=20, debug=false)
     # Comparison is implemented: isequal for each field where isapprox is not applicable
     if (debug)
@@ -56,9 +174,13 @@ function myApprox(a,b; maxdepth=20, debug=false)
     end
     # We either cannot recurse anymore or the object is a primitive object or we are at the bottom of the structure
     if (debug)
-        println("Bottom of structure!")
+        println("Bottom of structure! $a vs $b")
     end
     if(appr(a) && appr(b))
+        # isapprox(NaN, NaN) fails. Needed because typeof(NaN)=Float64
+        if isnan(a) && isnan(b)
+            return true
+        end
         return isapprox(a,b)
     else
         return isequal(a,b)

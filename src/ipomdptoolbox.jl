@@ -11,7 +11,7 @@ struct pomdpModel{S,A,W} <: IPOMDPs.Model{A,W}
     # Data
     updater::DiscreteUpdater
     policy::POMDPPolicy
-
+    depth::Int64
 end
 
 """
@@ -23,6 +23,7 @@ struct ipomdpModel{S,A,W} <: IPOMDPs.Model{A,W}
 	frame::IPOMDP{S,A,W}
     updater::DiscreteInteractiveUpdater
     policy::ReductionPolicy
+    depth::Int64
 end
 
 """
@@ -31,26 +32,40 @@ end
     Model(pomdp::POMDP)
     Model(ipomdp::IPOMDP)
 """
-function IPOMDPs.Model(pomdp::POMDP)
-    policy = SARSOP.POMDPPolicy(pomdp, "_temp_pomdp.policy")
-    solver = SARSOP.SARSOPSolver()
-    e_policy = POMDPs.solve(solver, pomdp, policy, silent=true, pomdp_file_name="_temp_pomdp.pomdpx")
+function IPOMDPs.Model(model;depth)
+    return IPOMDPs.Model(model)
+end
+
+function IPOMDPs.Model(pomdp::POMDP;depth=0)
+    # Timeout
+    t = 10.0
+    for i = 1:depth
+        t = t/10
+    end
+    name = hash(pomdp)
+    policy = SARSOP.POMDPPolicy(pomdp, "./tmp/_temp_$name.policy")
+    solver = SARSOP.SARSOPSolver(timeout=t)
+    e_policy = POMDPs.solve(solver, pomdp, policy, silent=true, pomdp_file_name="./tmp/_temp_$name.pomdpx")
     updater = SARSOP.updater(e_policy)
     belief = SARSOP.initialize_belief(updater, POMDPs.initialstate_distribution(pomdp))
 
     # Remove temporary files
-    rm("_temp_pomdp.policy", force=true)
-    rm("_temp_pomdp.pomdpx", force=true)
+    rm("./tmp/_temp_$name.policy", force=true)
+    rm("./tmp/_temp_$name.pomdpx", force=true)
 
-    return pomdpModel(belief, pomdp, updater, e_policy)
+    return pomdpModel(belief, pomdp, updater, e_policy, depth)
 end
-function IPOMDPs.Model(ipomdp::IPOMDP)
-    solver = ReductionSolver()
+function IPOMDPs.Model(ipomdp::IPOMDP;depth=0)
+    t = 10.0
+    for i = 1:depth
+        t = t/10
+    end
+    solver = ReductionSolver(t)
     updater = DiscreteInteractiveUpdater(ipomdp)
-    policy = solve(solver, ipomdp)
-    belief = initialize_belief(updater)
+    policy = IPOMDPs.solve(solver, ipomdp)
+    belief = IPOMDPs.initialize_belief(updater; depth=depth)
 
-    return ipomdpModel(belief, ipomdp, updater, policy)
+    return ipomdpModel(belief, ipomdp, updater, policy, depth)
 end
 
 """
@@ -62,7 +77,7 @@ function IPOMDPs.action(model::pomdpModel)
     return SARSOP.action(model.policy, model.history)
 end
 function IPOMDPs.action(model::ipomdpModel)
-    return action(model.policy, model.history)
+    return IPOMDPs.action(model.policy, model.history)
 end
 
 """
@@ -70,15 +85,32 @@ end
     tau(model::pomdpModel{S,A,W}, a::A, o::W)
     tau(model::ipomdpModel{S,A,W}, a::A, o::W)
 """
-function IPOMDPs.tau(model::pomdpModel{A,W}, a::A, o::W) where {A,W}
+function IPOMDPs.tau(model::pomdpModel{S,A,W}, a::A, o::W) where {S,A,W}
     belief = BeliefUpdaters.update(model.updater, model.history, a, o)
-    return pomdpModel(belief, model.frame, model.updater, model.policy)
+    return pomdpModel(belief, model.frame, model.updater, model.policy, model.depth)
 end
-function IPOMDPs.tau(model::ipomdpModel{S,A,W}, a::A, o::W) where {S,A,W}
-    # A = ai x Aj x Ak x ...
-    # O = Oj x Ok x ...
-    # Get all the other agents in the problem (J,K,...)
 
-    belief = update(model.updater, model.history, a, o)
-    return ipomdpModel(belief, model.frame, model.updater, model.policy)
+function IPOMDPs.tau(model::ipomdpModel{S,A,W}, a::A, o::W) where {S,A,W}
+    belief = IPOMDPs.update(model.updater, model.history, a, o)
+    return ipomdpModel(belief, model.frame, model.updater, model.policy, model.depth)
 end
+
+#FIXME: Maybe should return a distribution instead of just a probability?
+function IPOMDPs.actionP(model::ipomdpModel{S,A,W}, a::A) where {S,A,W}
+    if a == IPOMDPs.action(model)
+        return 1.0
+    else
+        return 0.0
+    end
+end
+
+function IPOMDPs.actionP(model::pomdpModel{S,A,W}, a::A) where {S,A,W}
+    if a == IPOMDPs.action(model)
+        return 1.0
+    else
+        return 0.0
+    end
+end
+
+
+
